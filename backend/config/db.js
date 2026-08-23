@@ -13,17 +13,13 @@ const connectDB = async () => {
 
   if (!cached.promise) {
     let rawUri = (process.env.MONGODB_URI || '').trim();
+    rawUri = rawUri.replace(/^["']|["']$/g, '');
 
-    // Clean up any extra quotes or accidental double slashes in the path
-    rawUri = rawUri.replace(/^["']|["']$/g, ''); // Remove surrounding quotes if any
-
-    // Split URL and parameters to cleanly enforce the database name
     const [baseUrl, queryParams] = rawUri.split('?');
-    const cleanBase = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+    const cleanBase = baseUrl.replace(/\/+$/, '');
     const lastSlashIndex = cleanBase.lastIndexOf('/');
     const hostPart = cleanBase.substring(0, lastSlashIndex);
 
-    // Standardize to a pristine URI format
     const finalUri = `${hostPart}/medicare_db${queryParams ? '?' + queryParams : '?retryWrites=true&w=majority'}`;
 
     const opts = {
@@ -47,4 +43,12 @@ const connectDB = async () => {
   return cached.conn;
 };
 
-module.exports = { connectDB };
+// Required helper functions for auth and data fallback routing
+const getIsInMemory = () => false;
+const getDemoStore = () => ({ users: [], appointments: [], vitals: [] });
+
+module.exports = {
+  connectDB,
+  getIsInMemory,
+  getDemoStore
+};
