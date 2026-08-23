@@ -1,7 +1,5 @@
 {
     "version": 2,
-    "buildCommand": "vite build frontend --outDir dist",
-    "outputDirectory": "frontend/dist",
     "rewrites": [
         {
             "source": "/api/(.*)",
