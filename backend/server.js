@@ -54,10 +54,12 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/symptoms', symptomRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Server listener (Binds cleanly for Render, Koyeb, and Localhost)
+// Server listener (Binds cleanly for Localhost / Standalone execution, bypassed on Vercel Serverless)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`[MediCare AI Backend] Server active on port http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`[MediCare AI Backend] Server active on port http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;

@@ -9,9 +9,16 @@ const getHeaders = () => {
 };
 
 const handleResponse = async (res) => {
-  const data = await res.json();
+  let data;
+  try {
+    const text = await res.text();
+    data = text ? JSON.parse(text) : {};
+  } catch (err) {
+    throw new Error(`Backend server unreachable or returned non-JSON response (${res.status}). Please ensure backend is running.`);
+  }
+
   if (!res.ok) {
-    throw new Error(data.message || 'API request failed.');
+    throw new Error(data.message || `API request failed with status ${res.status}`);
   }
   return data;
 };
