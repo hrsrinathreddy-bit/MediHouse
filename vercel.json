@@ -1,12 +1,8 @@
 {
     "version": 2,
+    "framework": null,
     "buildCommand": "npx vite build frontend --outDir frontend/dist",
     "outputDirectory": "frontend/dist",
-    "functions": {
-        "api/index.js": {
-            "includeFiles": "backend/**"
-        }
-    },
     "rewrites": [
         {
             "source": "/api/(.*)",
