@@ -1,27 +1,41 @@
 const mongoose = require('mongoose');
 
-let isInMemory = false;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 const connectDB = async () => {
-  const connString = process.env.MONGODB_URI;
-  if (connString) {
-    try {
-      const conn = await mongoose.connect(connString);
-      console.log(`[MongoDB] Connected: ${conn.connection.host}`);
-      isInMemory = false;
-      return true;
-    } catch (err) {
-      console.error(`[MongoDB] Connection Error: ${err.message}. Falling back to in-memory store.`);
-      isInMemory = true;
-      return false;
-    }
-  } else {
-    console.log('[MongoDB] MONGODB_URI not found in env. Running with in-memory data store for seamless local execution.');
-    isInMemory = true;
-    return false;
+  if (cached.conn) {
+    return cached.conn;
   }
+
+  if (!cached.promise) {
+    // Sanitize URI to eliminate accidental double slashes before the database name
+    let uri = (process.env.MONGODB_URI || '').trim();
+    uri = uri.replace('.mongodb.net//', '.mongodb.net/');
+
+    const opts = {
+      bufferCommands: false,
+      dbName: 'medicare_db' // Explicitly sets the clean database namespace
+    };
+
+    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
+      console.log('[MongoDB] Connected successfully to database namespace');
+      return mongooseInstance;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    console.error('[MongoDB] Connection error:', e);
+    throw e;
+  }
+
+  return cached.conn;
 };
 
-const getIsInMemory = () => isInMemory;
-
-module.exports = { connectDB, getIsInMemory };
+module.exports = { connectDB };
