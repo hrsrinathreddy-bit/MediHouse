@@ -13,20 +13,23 @@ const connectDB = async () => {
 
   if (!cached.promise) {
     let rawUri = (process.env.MONGODB_URI || '').trim();
+
+    // Remove enclosing quotes if present
     rawUri = rawUri.replace(/^["']|["']$/g, '');
 
-    const [baseUrl, queryParams] = rawUri.split('?');
-    const cleanBase = baseUrl.replace(/\/+$/, '');
-    const lastSlashIndex = cleanBase.lastIndexOf('/');
-    const hostPart = cleanBase.substring(0, lastSlashIndex);
-
-    const finalUri = `${hostPart}/medicare_db${queryParams ? '?' + queryParams : '?retryWrites=true&w=majority'}`;
+    // Sanitize accidental multiple slashes before the database name
+    let cleanUri = rawUri.replace(/mongodb\.net\/+(\w+)/i, 'mongodb.net/$1');
+    cleanUri = cleanUri.replace(/mongodb\.net\/+\?/i, 'mongodb.net/medicare_db?');
+    if (!cleanUri.includes('.mongodb.net/') || cleanUri.endsWith('.mongodb.net/')) {
+      cleanUri = cleanUri.replace(/\/?$/, '/medicare_db?retryWrites=true&w=majority');
+    }
 
     const opts = {
       bufferCommands: false,
+      dbName: 'medicare_db'
     };
 
-    cached.promise = mongoose.connect(finalUri, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(cleanUri, opts).then((mongooseInstance) => {
       console.log('[MongoDB] Connected successfully');
       return mongooseInstance;
     });
@@ -43,7 +46,6 @@ const connectDB = async () => {
   return cached.conn;
 };
 
-// Required helper functions for auth and data fallback routing
 const getIsInMemory = () => false;
 const getDemoStore = () => ({ users: [], appointments: [], vitals: [] });
 
