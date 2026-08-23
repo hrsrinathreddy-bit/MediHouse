@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "buildCommand": "npx vite build frontend --outDir frontend/dist",
+    "buildCommand": "cd frontend && npm install && npm run build",
     "outputDirectory": "frontend/dist",
     "rewrites": [
         {
