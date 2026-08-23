@@ -1,5 +1,7 @@
 {
     "version": 2,
+    "buildCommand": "npx vite build frontend --outDir frontend/dist",
+    "outputDirectory": "frontend/dist",
     "rewrites": [
         {
             "source": "/api/(.*)",
