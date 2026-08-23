@@ -11,31 +11,20 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
-// Enable CORS and JSON parsing
 app.use(cors({
   origin: '*',
   credentials: true
 }));
 app.use(express.json());
 
-// Initialize Database connection
-connectDB();
-
-// Root Landing & Health Status (Fixes "Cannot GET /")
-app.get('/', (req, res) => {
-  res.json({
-    status: 'online',
-    service: 'MediCare AI API Gateway',
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      health: '/api/health',
-      auth: '/api/auth',
-      appointments: '/api/appointments',
-      vitals: '/api/vitals',
-      symptoms: '/api/symptoms',
-      admin: '/api/admin'
-    }
-  });
+// Middleware to ensure DB connection per serverless request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({ error: 'Database connection failed', details: err.message });
+  }
 });
 
 // Health check endpoint
@@ -54,7 +43,6 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/symptoms', symptomRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Server listener (Binds cleanly for Localhost / Standalone execution, bypassed on Vercel Serverless)
 const PORT = process.env.PORT || 5000;
 if (require.main === module) {
   app.listen(PORT, () => {
